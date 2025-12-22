@@ -1,0 +1,14 @@
+--- mtd-utils-1.4.5/include/common.h
++++ mtd-utils-1.4.5/include/common.h
+@@ -27,3 +27,4 @@
+ #include <errno.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef PROGRAM_NAME
+--- mtd-utils-1.4.5/mkfs.ubifs/mkfs.ubifs.h
++++ mtd-utils-1.4.5/mkfs.ubifs/mkfs.ubifs.h
+@@ -56,3 +56,4 @@
+ #include <sys/file.h>
++#include <sys/sysmacros.h>
+ 
+ #include "libubi.h"
