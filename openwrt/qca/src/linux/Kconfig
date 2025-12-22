@@ -1,0 +1,23 @@
+#
+# For a description of the syntax of this configuration file,
+# see Documentation/kbuild/kconfig-language.txt.
+#
+mainmenu "Linux/$ARCH $KERNELVERSION Kernel Configuration"
+
+config SRCARCH
+	string
+	option env="SRCARCH"
+
+source "arch/$SRCARCH/Kconfig"
+
+config ACTIVE_FLOW_CONTROL
+	bool "active flow control"
+	default n
+	help
+	  This is active flow control.
+
+config SOFTIRQ_DYNAMIC_TUNNING
+	bool "dynamic tunning in softirq "
+	default n
+	help
+	  This is softirq dynamic tunning to control softirq circles.
