@@ -1,11 +1,13 @@
 # An attempt to modernize TP-Link's GPL sources to build them in modern environments
 
+Main goal: modify U-Boot and get a U-Boot image suitable for flashing using a parallel programmer.
+
 General problems: new GCC `-std` defaults (the code is clearly made for gnu89 without any explicit `-std` settings inside configuration files); rotten download links to ancient libs; "old-style" function definitions in 30-year-old (!) parts of the code; `extern inline` targeting gnu89 inline semantics; `python2-dev` dependency.
 
 Branches:
  - master = debian testing (13-14), failure to build tools: unable to proceed further than `coccinelle` due to outdated source and python2-dev requirements
  - debian9 = debian bullseye, failure to build toolchain, stuck at locale generation step due to outdated unicode-related sources
- - debian8 = debian jessie, in the works
+ - debian8 = debian jessie, failure to build kernel, undefined reference to some obscure function. U-boot seems to be built, though.
 
 ## Original note:
 
@@ -24,5 +26,6 @@ Notice:
 
 2. If you are of the opinion that TP-LINK should offer further source code subject
    to the GPL, please contact us under 'support@tp-link.com'.
+
 
 
