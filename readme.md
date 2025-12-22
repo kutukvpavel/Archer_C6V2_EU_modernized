@@ -1,6 +1,6 @@
 # An attempt to modernize TP-Link's GPL sources to build them in modern environments
 
-General problems: new GCC `-std` defaults (the code is clearly made for gnu89 without any explicite `-std` settings inside configuration files); rotten download links to ancient libs; "old-style" function definitions in 30-year-old (!) parts of the code; `extern inline` targeting gnu89 inline semantics; `python2-dev` dependency.
+General problems: new GCC `-std` defaults (the code is clearly made for gnu89 without any explicit `-std` settings inside configuration files); rotten download links to ancient libs; "old-style" function definitions in 30-year-old (!) parts of the code; `extern inline` targeting gnu89 inline semantics; `python2-dev` dependency.
 
 Branches:
  - master = debian testing (13-14), failure to build tools: unable to proceed further than `coccinelle` due to outdated source and python2-dev requirements
@@ -24,4 +24,5 @@ Notice:
 
 2. If you are of the opinion that TP-LINK should offer further source code subject
    to the GPL, please contact us under 'support@tp-link.com'.
+
 
