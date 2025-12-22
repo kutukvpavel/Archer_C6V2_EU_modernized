@@ -1,0 +1,10 @@
+445b1a4e309c508962d24ac748f56257 *openwrt-ar71xx-c6v2-qca-legacy-uboot.bin
+f979076e1095db50861a2ba0342ff2d3 *openwrt-ar71xx-generic-root.squashfs
+c903bc1b862aa7939d93a7e138585a4a *openwrt-ar71xx-generic-root.squashfs-64k
+30855fafcfad92f54ac284b7b0975898 *openwrt-ar71xx-generic-uImage-gzip.bin
+e09110b090b08d5f5c973839145f76d4 *openwrt-ar71xx-generic-uImage-lzma.bin
+dee6724c9e1810661fb8b6cc8b7bf96d *openwrt-ar71xx-generic-vmlinux-lzma.elf
+47ba8f552e235e352093b5166de77f95 *openwrt-ar71xx-generic-vmlinux.bin
+9d11c502ac846be0370de8d4027ba340 *openwrt-ar71xx-generic-vmlinux.elf
+0b939db719d62daac52a9f1bef514c9e *openwrt-ar71xx-generic-vmlinux.gz
+9556f6a652af5feb5cb7c5a0ddd5cae6 *openwrt-ar71xx-generic-vmlinux.lzma
