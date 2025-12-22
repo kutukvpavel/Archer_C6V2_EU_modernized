@@ -1,0 +1,16 @@
+--- pkg-config-0.25/glib-1.2.10/glib.h	2001-02-27 06:44:00.285805417 +0300
++++ pkg-config-0.25/glib-1.2.10/glib.h	2025-12-22 03:53:10.331120989 +0300
+@@ -204,8 +204,12 @@
+ #ifndef G_INLINE_FUNC
+ #  ifdef __GNUC__
+ #    ifdef __OPTIMIZE__
+-#      define G_INLINE_FUNC extern inline
++#       ifdef __GNUC_STDC_INLINE__
++#         define G_INLINE_FUNC inline
++#       else
++#         define G_INLINE_FUNC extern inline
++#       endif
+ #    else
+ #      undef G_CAN_INLINE
+ #      define G_INLINE_FUNC extern
+ #    endif
