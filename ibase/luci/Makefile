@@ -14,22 +14,17 @@ PKG_BUILD_PARALLEL:=0
 ifeq ($(USELOCAL),1)
   PKG_VERSION:=0.11+svn
 else
-  PKG_SOURCE_URL:=git://codeaurora.org/quic/qsdk/luci
-  ifeq ($(DUMP),)
-    PKG_REV:=1cdab340cd5ed15be8f25d9fe97accda9ac62ee2
-    PKG_VERSION:=0.11.1
-  endif
+  PKG_VERSION:=0.11.1
+  PKG_SOURCE_URL:=http://github.com/kutukvpavel/luci-0.11.1/raw/refs/heads/main/
   PKG_SOURCE_SUBDIR:=$(PKG_NAME)-$(PKG_VERSION)
   PKG_SOURCE:=$(PKG_SOURCE_SUBDIR).tar.gz
-  PKG_SOURCE_PROTO:=git
-  PKG_SOURCE_VERSION:=$(PKG_REV)
 endif
 
 PKG_BUILD_DEPENDS:=$(if $(STAGING_DIR_ROOT),lua/host)
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
 PKG_INSTALL_DIR:=$(PKG_BUILD_DIR)/ipkg-install
 
-PKG_MIRROR_MD5SUM:=d65ab9a2e53692e46a80df55aa08ac2d
+PKG_MD5SUM:=9d40c4639bbdf24dc66bf4be8fa324cf
 
 LUA_TARGET:=source
 LUCI_CFLAGS:=

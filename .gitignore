@@ -1,7 +1,5 @@
 /openwrt/staging_dir
 /openwrt/build_dir
 /openwrt/tmp
-/openwrt/dl
 /openwrt/feeds
 /openwrt/feeds.conf
-
