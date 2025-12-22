@@ -1,0 +1,4 @@
+openwrt/staging_dir
+openwrt/tmp
+feeds/
+feeds.conf
