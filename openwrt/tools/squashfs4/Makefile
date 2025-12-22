@@ -18,6 +18,9 @@ HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/squashfs$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/host-build.mk
 
+CFLAGS+=-std=gnu90
+HOST_CFLAGS+=-std=gnu90
+
 define Host/Compile
 	$(MAKE) -C $(HOST_BUILD_DIR)/squashfs-tools \
 		CC="$(HOSTCC)" \
