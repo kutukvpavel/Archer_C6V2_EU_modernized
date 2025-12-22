@@ -1,0 +1,17 @@
+--- sed-4.2.1/basicdefs.h	2025-12-22 02:24:04.307046547 +0300
++++ sed-4.2.1/basicdefs.h	2025-12-22 02:41:19.398405774 +0300
+@@ -103,13 +103,7 @@
+ #endif
+ 
+ #ifndef HAVE_MEMMOVE
+-# ifndef memmove
+-   /* ../lib/libsed.a provides a memmove() if the system doesn't.
+-      Here is where we declare its return type; we don't prototype
+-      it because that sometimes causes problems when we're running in
+-      bootstrap mode on a system which really does support memmove(). */
+-   extern VOID *memmove();
+-# endif
++#warning "This has no effect in 2025"
+ #endif
+ 
+ #ifndef HAVE_MEMCPY
