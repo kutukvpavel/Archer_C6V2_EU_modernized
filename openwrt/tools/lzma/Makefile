@@ -17,6 +17,9 @@ HOST_BUILD_DIR:=$(BUILD_DIR_HOST)/$(PKG_NAME)-$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/host-build.mk
 
+CFLAGS+=-std=gnu99
+HOST_CFLAGS+=-std=gnu99
+
 UTIL_DIR=$(HOST_BUILD_DIR)/C/LzmaUtil
 ALONE_DIR=$(HOST_BUILD_DIR)/CPP/7zip/Compress/LZMA_Alone
 
