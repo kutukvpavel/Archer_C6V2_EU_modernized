@@ -12,7 +12,7 @@ PKG_VERSION:=2.62
 PKG_RELEASE:=2
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
-PKG_SOURCE_URL:=http://thekelleys.org.uk/dnsmasq
+PKG_SOURCE_URL:=https://dnsmasq.org/archive/
 PKG_MD5SUM:=f47e5cb8f5bac6343f24b2dbe317ab40
 
 PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(BUILD_VARIANT)/$(PKG_NAME)-$(PKG_VERSION)
@@ -26,7 +26,7 @@ define Package/dnsmasq/Default
   SECTION:=TP-LINK
   CATEGORY:=TP-LINK iplatform apps
   TITLE:=A lightweight DNS and DHCP server
-  URL:=http://www.thekelleys.org.uk/dnsmasq/
+  URL:=https://dnsmasq.org/archive/
 endef
 
 define Package/dnsmasq
