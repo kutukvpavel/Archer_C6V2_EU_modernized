@@ -1282,7 +1282,7 @@ Architecture: ar71xx
 16K	total
 
 Package: kmod-qca-ssdk-hnat
-Version: 3.3.8+g-1
+Version: 3.3.8+gbba58d2-dirty-1
 Depends: kernel (= 3.3.8-1-8492eb471d39987bd9a3c8fff8c34ad2)
 Provides: qca-ssdk
 Status: install ok installed
@@ -1443,10 +1443,10 @@ Architecture: ar71xx
 0	/lib/libdl.so.0
 84K	/lib/libm-0.9.33.2.so
 0	/lib/libm.so.0
-576K	/lib/libuClibc-0.9.33.2.so
+572K	/lib/libuClibc-0.9.33.2.so
 4.0K	/lib/libutil-0.9.33.2.so
 0	/lib/libutil.so.0
-736K	total
+732K	total
 
 Package: libcurl
 Version: 7.29.0-1
@@ -2103,21 +2103,21 @@ Architecture: ar71xx
 12K	total
 
 Package: qca-legacy-uboot-c6v2
-Version: g-1
+Version: gbba58d2-dirty-1
 Depends: libc
 Provides:
 Status: install ok installed
 Architecture: ar71xx
 
 Package: qca-ssdk-shell
-Version: g-1
+Version: gbba58d2-dirty-1
 Depends: libc
 Provides:
 Status: install ok installed
 Architecture: ar71xx
 
-536K	/usr/sbin/ssdk_sh
-536K	total
+532K	/usr/sbin/ssdk_sh
+532K	total
 
 Package: radvd
 Version: 1.7-1
