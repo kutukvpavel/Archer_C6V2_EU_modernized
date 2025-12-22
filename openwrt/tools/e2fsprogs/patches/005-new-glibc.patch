@@ -1,0 +1,10 @@
+--- e2fsprogs-1.42.4/lib/blkid/devname.c
++++ e2fsprogs-1.42.4/lib/blkid/devname.c
+@@ -35,5 +35,7 @@
+ #endif
+ #if HAVE_SYS_MKDEV_H
+ #include <sys/mkdev.h>
++#elif HAVE_SYS_SYSMACROS_H
++#include <sys/sysmacros.h>
+ #endif
+ #include <time.h>

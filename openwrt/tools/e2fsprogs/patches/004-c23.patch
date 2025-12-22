@@ -1,0 +1,9 @@
+--- e2fsprogs-1.42.4/config/parse-types.sh
++++ e2fsprogs-1.42.4/config/parse-types.sh
+@@ -27,5 +27,5 @@
+ #include <stdio.h>
+ #include <stdlib.h>
+-main(int argc, char **argv)
++int main(int argc, char **argv)
+ {
+ #ifdef __U8_TYPEDEF

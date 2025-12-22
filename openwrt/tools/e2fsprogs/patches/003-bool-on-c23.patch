@@ -1,0 +1,13 @@
+--- e2fsprogs-1.42.4/lib/ext2fs/tdb.c
++++ e2fsprogs-1.42.4/lib/ext2fs/tdb.c
+@@ -104,6 +107,9 @@
+ #endif
+ #endif
+ 
+-typedef int bool;
++#include <stdbool.h>
++#if !(__bool_true_false_are_defined)
++   typedef int bool;
++#endif
+ 
+ #include "tdb.h"
