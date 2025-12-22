@@ -1,0 +1,14 @@
+--- squashfs3.0/squashfs-tools/mksquashfs.c
++++ squashfs3.0/squashfs-tools/mksquashfs.c
+@@ -42,3 +42,4 @@
+ #include <sys/mman.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef linux
+--- squashfs3.0/squashfs-tools/unsquashfs.c
++++ squashfs3.0/squashfs-tools/unsquashfs.c
+@@ -42,3 +42,4 @@
+ #include <utime.h>
++#include <sys/sysmacros.h>
+ 
+ #ifndef linux
