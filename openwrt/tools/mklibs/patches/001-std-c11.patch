@@ -1,0 +1,18 @@
+--- mklibs-0.1.34/configure
++++ mklibs-0.1.34/configure
+@@ -2894,13 +2894,13 @@
+ elif test $ac_cv_prog_cxx_g = yes; then
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-g -O2"
++    CXXFLAGS="-g -O2 -std=gnu++11"
+   else
+     CXXFLAGS="-g"
+   fi
+ else
+   if test "$GXX" = yes; then
+-    CXXFLAGS="-O2"
++    CXXFLAGS="-O2 -std=gnu++11"
+   else
+     CXXFLAGS=
+   fi
+ fi
