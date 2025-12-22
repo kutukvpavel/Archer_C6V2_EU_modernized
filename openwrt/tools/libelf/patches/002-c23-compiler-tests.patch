@@ -1,0 +1,82 @@
+--- libelf-0.8.13/configure
++++ libelf-0.8.13/configure
+@@ -1115,6 +1115,7 @@ else
+ #line 1116 "configure"
+ #include "confdefs.h"
+ #include <ctype.h>
++#include <stdlib.h>
+ #define ISLOWER(c) ('a' <= (c) && (c) <= 'z')
+ #define TOUPPER(c) (ISLOWER(c) ? 'A' + ((c) - 'a') : (c))
+ #define XOR(e, f) (((e) && !(f)) || (!(e) && (f)))
+@@ -1484,6 +1485,7 @@ else
+ #line 1485 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+@@ -1523,6 +1525,7 @@ else
+ #line 1524 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+@@ -1562,6 +1565,7 @@ else
+ #line 1563 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+@@ -1601,6 +1605,7 @@ else
+ #line 1602 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+@@ -1641,6 +1646,7 @@ else
+ #line 1642 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int main()
+ {
+   FILE *f=fopen("conftestval", "w");
+@@ -2236,6 +2242,7 @@ else
+   cat > conftest.$ac_ext <<EOF
+ #line 2238 "configure"
+ #include "confdefs.h"
++#include <stdlib.h>
+ 
+ /* Thanks to Mike Haertel and Jim Avera for this test.
+    Here is a matrix of mmap possibilities:
+@@ -2527,6 +2534,7 @@ else
+ #line 2528 "configure"
+ #include "confdefs.h"
+ #include "confdefs.h"
++#include <stdlib.h>
+ #if HAVE_MEMMOVE
+ extern void *memmove();
+ #else
+@@ -3297,6 +3305,7 @@ else
+ #line 3298 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int
+ main(int argc, char **argv) {
+   char buf[BUFSIZ];
+@@ -3379,6 +3388,7 @@ else
+ #line 3380 "configure"
+ #include "confdefs.h"
+ #include <stdio.h>
++#include <stdlib.h>
+ int
+ main(int argc, char **argv) {
+   char buf[BUFSIZ];
