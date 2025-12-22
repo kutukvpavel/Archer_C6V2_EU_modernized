@@ -11,15 +11,16 @@ PKG_NAME:=curl
 PKG_VERSION:=7.29.0
 PKG_RELEASE:=1
 
-PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.bz2
-PKG_SOURCE_URL:=http://curl.haxx.se/download/ \
+PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
+PKG_SOURCE_URL:=https://curl.se/download/archeology/ \
+	http://curl.haxx.se/download/ \
 	http://www.mirrorspace.org/curl/ \
 	http://curl.mirror.internet.tp/download/ \
 	ftp://ftp.sunet.se/pub/www/utilities/curl/ \
 	ftp://ftp.planetmirror.com/pub/curl/ \
 	http://www.mirrormonster.com/curl/download/ \
 	http://curl.mirrors.cyberservers.net/download/
-PKG_MD5SUM:=fa5f37f38a8042020e292ce7ec5341ce
+PKG_MD5SUM:=4f57d3b4a3963038bd5e04dbff385390
 
 PKG_FIXUP:=autoreconf
 PKG_BUILD_PARALLEL:=1
