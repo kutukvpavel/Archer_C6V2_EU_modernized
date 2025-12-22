@@ -14,7 +14,7 @@ PKG_RELEASE:=3.1
 
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.xz
 PKG_MD5SUM:=7c996a0400667b57ab4fb53a013ae742
-PKG_SOURCE_URL:=@SF/xtables-addons
+PKG_SOURCE_URL:=https://inai.de/files/xtables-addons/
 PKG_BUILD_DEPENDS:=iptables
 PKG_INSTALL:=1
 PKG_BUILD_PARALLEL:=1
