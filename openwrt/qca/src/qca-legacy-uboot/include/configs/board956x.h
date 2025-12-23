@@ -15,115 +15,380 @@
  * 
  */
 
+ // Looks like most of this file is grabage and OEM leftovers. Every important bit for
+ // actual product is hard-coded by hand, instead of being computed using macros...
+
 #ifndef __BOARD_956X_H
 #define __BOARD_956X_H
 
 #include <config.h>
 
+/** Don't know if this is needed, but will leave it here for now */
 #undef MTDPARTS_DEFAULT
-
 #undef CFG_HZ
+/** ************************************************************ */
 
 #include <atheros.h>
 
-#ifndef FLASH_SIZE
-#define FLASH_SIZE 8
-#endif
+/** Don't know if this is needed, but will leave it here for now */
+#undef CFG_ATHRS26_PHY
+#define DEBUG
+/** ************************************************************ */
+
+
 /*-----------------------------------------------------------------------
  * FLASH and environment organization
  */
-#define CFG_MAX_FLASH_BANKS	1	/* max number of memory banks */
+#ifndef FLASH_SIZE
+	#define FLASH_SIZE 16 //This is true
+#endif
+
+#define CFG_MAX_FLASH_BANKS	1	//This is true and relevant
 #if (FLASH_SIZE == 16)
-#define CFG_MAX_FLASH_SECT	256	/* max number of sectors on one chip */
-#define ATH_MTDPARTS_MIB0	"64k(mib0)"
-#define ATH_ROOTFS_SIZE     "14848k(rootfs)"
-#elif (FLASH_SIZE == 8)
-#define CFG_MAX_FLASH_SECT	128	/* max number of sectors on one chip */
-#define ATH_MTDPARTS_MIB0	"64k(mib0)"
-#elif (FLASH_SIZE == 4)
-#define CFG_MAX_FLASH_SECT	64	/* max number of sectors on one chip */
-#define ATH_MTDPARTS_MIB0	"64k(mib0)"
-#elif (FLASH_SIZE == 2)
-#define CFG_MAX_FLASH_SECT	32	/* max number of sectors on one chip */
-#define ATH_MTDPARTS_MIB0	"64k(mib0)"
-#else 
-#       error "Invalid flash Size/sector "
+	#define CFG_MAX_FLASH_SECT	256	//This is true and relevant
+	#define ATH_MTDPARTS_MIB0	"64k(mib0)"	//We are OK with this default
+#elif (FLASH_SIZE == 8)	//This is the stock setting
+	#define CFG_MAX_FLASH_SECT	128
+	#define ATH_MTDPARTS_MIB0	"64k(mib0)"
+//Remove others, <=4MB flash is utter nonsense in 2025
+#else
+	#error "Invalid flash Size/sector "
 #endif
 
-#define CFG_FLASH_SECTOR_SIZE	(64*1024)
+#define CFG_FLASH_SECTOR_SIZE	(64*1024) // 0x10000, this is true and relevant
 #if (FLASH_SIZE == 16)
-#define CFG_FLASH_SIZE		0x01000000	/* Total flash size */
+	#define CFG_FLASH_SIZE		0x01000000	//This is true
 #elif (FLASH_SIZE == 8)
-#define CFG_FLASH_SIZE		0x00800000	/* max number of sectors on one chip */
-#elif (FLASH_SIZE == 4)
-#define CFG_FLASH_SIZE		0x00400000	/* Total flash size */
-#elif (FLASH_SIZE == 2) 
-#define CFG_FLASH_SIZE		0x00200000	/* Total flash size */
+	#define CFG_FLASH_SIZE		0x00800000	//This is the stock setting
+//Remove others, <=4MB flash is utter nonsense in 2025
 #else 
-#       error "Invalid flash Size "
+	#error "Invalid flash Size "
 #endif
 
-#ifndef COMPRESSED_UBOOT
-#define ENABLE_DYNAMIC_CONF	1
+#if (CFG_MAX_FLASH_SECT * CFG_FLASH_SECTOR_SIZE) != CFG_FLASH_SIZE //Sanity check, relevant
+	#error "Invalid flash configuration"
 #endif
 
-#undef CFG_ATHRS26_PHY
-
-#if (CFG_MAX_FLASH_SECT * CFG_FLASH_SECTOR_SIZE) != CFG_FLASH_SIZE
-#	error "Invalid flash configuration"
-#endif
-
-#define CFG_FLASH_WORD_SIZE	unsigned short
+#define CFG_FLASH_WORD_SIZE	unsigned short	//16-bit words, probably has more to do with SPI controller than the flash chip
 
 #if defined(CONFIG_ATH_NAND_BR) && defined(COMPRESSED_UBOOT)
-#define CFG_FLASH_BASE			0xa0100000
+	#define CFG_FLASH_BASE			0xa0100000	//Unused
 #else
-/* NOR Flash start address */
-#define CFG_FLASH_BASE			0x9f000000 
+	#define CFG_FLASH_BASE			0x9f000000 /* NOR Flash start address - this is true */
 #endif
 
 #ifdef COMPRESSED_UBOOT
-#ifdef CFG_DOUBLE_BOOT_SECOND
-#define BOOTSTRAP_TEXT_BASE		0x9f020000
-#else
-#define BOOTSTRAP_TEXT_BASE		CFG_FLASH_BASE  
+	#ifdef CFG_DOUBLE_BOOT_SECOND
+		#define BOOTSTRAP_TEXT_BASE		0x9f020000 //Not used on C6v2
+	#else
+	#define BOOTSTRAP_TEXT_BASE		CFG_FLASH_BASE  
 #endif
-#define BOOTSTRAP_CFG_MONITOR_BASE	BOOTSTRAP_TEXT_BASE
+	#define BOOTSTRAP_CFG_MONITOR_BASE	BOOTSTRAP_TEXT_BASE
 #endif
 
-#define CONFIG_PCI_CONFIG_DATA_IN_OTP
+#define CFG_BOOTM_LEN	((FLASH_SIZE) << 20) /* 16 MB */ //Restricts uncompressed size of uImage
 
-/*
- * Defines to change flash size on reboot
+//The following #defines are needed to get flash environment right (???)
+#define	CFG_MONITOR_BASE	TEXT_BASE
+#define	CFG_MONITOR_LEN		(192 << 10)
+/*---------------------------------------------------------------------*/
+
+/*****************************************************************
+ * U-Boot dynamic configuration and commands
  */
-#ifdef ENABLE_DYNAMIC_CONF
-#define UBOOT_FLASH_SIZE		(256 * 1024)
-#define UBOOT_ENV_SEC_START		(CFG_FLASH_BASE + UBOOT_FLASH_SIZE)
-
-#define CFG_FLASH_MAGIC			0xaabacada
-#define CFG_FLASH_MAGIC_F		(UBOOT_ENV_SEC_START + CFG_FLASH_SECTOR_SIZE - 0x20)
-#define CFG_FLASH_SECTOR_SIZE_F		*(volatile int *)(CFG_FLASH_MAGIC_F + 0x4)
-#define CFG_FLASH_SIZE_F		*(volatile int *)(CFG_FLASH_MAGIC_F + 0x8) /* Total flash size */
-#define CFG_MAX_FLASH_SECT_F		(CFG_FLASH_SIZE / CFG_FLASH_SECTOR_SIZE) /* max number of sectors on one chip */
+#ifndef COMPRESSED_UBOOT //Not sure if we are compressed or not
+	#define ENABLE_DYNAMIC_CONF	1
 #else
-#define CFG_FLASH_SIZE_F		CFG_FLASH_SIZE
-#define CFG_FLASH_SECTOR_SIZE_F		CFG_FLASH_SECTOR_SIZE
+	#error "U-Boot is actually compressed" //< Interim to find out which config is actually used
 #endif
 
-/*
+#ifdef ENABLE_DYNAMIC_CONF
+	#define UBOOT_FLASH_SIZE			(256 * 1024)	//This is not true, production device is 128k
+	#define UBOOT_ENV_SEC_START			(CFG_FLASH_BASE + UBOOT_FLASH_SIZE)
+	#define CFG_FLASH_MAGIC				0xaabacada
+	#define CFG_FLASH_MAGIC_F			(UBOOT_ENV_SEC_START + CFG_FLASH_SECTOR_SIZE - 0x20)
+	#define CFG_FLASH_SECTOR_SIZE_F		*(volatile int *)(CFG_FLASH_MAGIC_F + 0x4)
+	#define CFG_FLASH_SIZE_F			*(volatile int *)(CFG_FLASH_MAGIC_F + 0x8) /* Total flash size */
+	#define CFG_MAX_FLASH_SECT_F		(CFG_FLASH_SIZE / CFG_FLASH_SECTOR_SIZE) /* max number of sectors on one chip */
+	#define CFG_DDR_MAGIC				0xaabacada
+	#define CFG_DDR_MAGIC_F				(UBOOT_ENV_SEC_START + CFG_FLASH_SECTOR_SIZE - 0x30)
+	#define CFG_DDR_CONFIG_VAL_F		*(volatile int *)(CFG_DDR_MAGIC_F + 4)
+	#define CFG_DDR_CONFIG2_VAL_F		*(volatile int *)(CFG_DDR_MAGIC_F + 8)
+	#define CFG_DDR_EXT_MODE_VAL_F		*(volatile int *)(CFG_DDR_MAGIC_F + 12)
+#else
+	#define CFG_FLASH_SIZE_F			CFG_FLASH_SIZE
+	#define CFG_FLASH_SECTOR_SIZE_F		CFG_FLASH_SECTOR_SIZE
+#endif
+
+#ifndef COMPRESSED_UBOOT
+	#define ATH_CFG_COMMANDS ((                     \
+							  CONFIG_CMD_DFL |  \
+							  CFG_CMD_DHCP |    \
+							  CFG_CMD_ELF |     \
+							  CFG_CMD_PCI |     \
+							  CFG_CMD_FLS |     \
+							  CFG_CMD_MII |     \
+							  CFG_CMD_PING |    \
+							  CFG_CMD_NET |     \
+							  CFG_CMD_ENV |     \
+							  CFG_CMD_PLL |     \
+							  CFG_CMD_FLASH |   \
+							  CFG_CMD_RUN |     \
+							  CFG_CMD_ELF |     \
+							  CFG_CMD_DDR |     \
+							  CFG_CMD_ETHREG) & \
+						  ~(                    \
+							  CFG_CMD_IMLS |    \
+							  CFG_CMD_FLASH))
+#else
+	#ifdef CONFIG_ATH_NAND_BR
+		#define ATH_CFG_COMMANDS ((                    \
+							  CONFIG_CMD_DFL | \
+							  CFG_CMD_PING |   \
+							  CFG_CMD_NET) &   \
+						  ~(                   \
+							  CFG_CMD_FLASH))
+	#else
+		#define ATH_CFG_COMMANDS (CONFIG_CMD_DFL | \
+						  CFG_CMD_PING |   \
+						  CFG_CMD_NET)
+	#endif
+#endif /* #ifndef COMPRESSED_UBOOT */
+#ifdef CONFIG_ATH_NAND_SUPPORT
+	#ifdef CONFIG_ATH_NAND_BR
+		#define CFG_ENV_IS_IN_NAND 1
+		#define CFG_ENV_OFFSET 0x40000u
+		#define CFG_ENV_SIZE 0x40000u
+		#define ATH_EXTRA_CMD CFG_CMD_NAND
+	#else
+		#define CFG_ENV_IS_IN_FLASH 1
+		#define CFG_ENV_SIZE CFG_FLASH_SECTOR_SIZE
+		#define ATH_EXTRA_CMD (CFG_CMD_NAND | CFG_CMD_FLASH)
+	#endif
+	#define NAND_MAX_CHIPS 1
+	#define CFG_MAX_NAND_DEVICE 1
+#else
+	#define ATH_EXTRA_CMD CFG_CMD_FLASH
+	#define CFG_ENV_IS_IN_FLASH 1
+	#define CFG_ENV_SIZE CFG_FLASH_SECTOR_SIZE
+	#define CFG_ENV_ADDR		0x9f040000
+#endif
+#ifdef COMPRESSED_UBOOT
+	#undef CFG_ENV_IS_IN_FLASH
+	#undef CFG_ENV_IS_IN_NAND
+	#undef CFG_ENV_ADDR
+	#define CFG_ENV_IS_NOWHERE 1
+#endif
+#define CONFIG_COMMANDS			(ATH_CFG_COMMANDS | ATH_EXTRA_CMD)
+#ifndef COMPRESSED_UBOOT
+	#define CFG_HUSH_PARSER
+	#define CFG_PROMPT_HUSH_PS2		"hush>"
+#endif
+/*******************************************************************/
+
+
+/********************************************************************
+ * Flash layout configuration
+ */
+#define __gen_cmd(n, a, f, ec, cc, el)		\
+	#n "=tftp 0x80060000 ${dir}" #f "&&"	\
+	#ec " " #a " " #el "&&"			\
+	#cc " $fileaddr " #a " $filesize\0"
+#define gen_cmd(n, a, f)			\
+	__gen_cmd(n, a, f, erase, cp.b, +$filesize)
+#define gen_cmd_el(n, a, f, el)			\
+	__gen_cmd(n, a, f, erase, cp.b, +el)
+#define nand_gen_cmd(n, a, f, s)		\
+	__gen_cmd(n, a, f, nand erase, nand write, s)
+#define __fs_name(x, y)		x ## y
+#define _fs_name(x, y)		__fs_name(x, y)
+#define fs_name(y)		_fs_name(__CONFIG_BOARD_NAME, y)
+
+#ifdef CONFIG_ATH_NAND_SUPPORT
+	#ifdef CONFIG_ATH_NAND_BR	// nand boot rom
+		#if defined(COMPRESSED_UBOOT)
+			#define ATH_U_CMD	nand_gen_cmd(lu, 0x0, 2fw.bin, 0x20000)
+			#define MTDPARTS_DEFAULT	"mtdparts=ath-nand:128k(u-boot),384k(free),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
+		#else
+			#define ATH_U_CMD	nand_gen_cmd(lu, 0x0, 2fw.bin, 0x40000)
+			#define MTDPARTS_DEFAULT "mtdparts=ath-nand:256k(u-boot),256k(u-boot-env),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
+		#endif
+		#define ATH_ROOT_DEV	"31:03"
+		#define CFG_ENV_ADDR	0x00040000
+	#else //dual flash
+		#ifdef ATH_SPI_NAND 
+			#define MTDPARTS_DEFAULT "mtdparts=ath-nor0:256k(u-boot),64k(u-boot-env),512k(pad),256k(config),896k(reserved),64k(caldata);ath-spi-nand:2m(uImage),20m(rootfs),86m(storage),20m(reserved)"
+			#define ATH_ROOT_DEV	"31:07"
+			#define ATH_F_LEN	0x1400000
+			#define ATH_F_ADDR	0x200000
+			#define ATH_K_ADDR	0x0
+			#define ATH_K_LEN	0x200000
+		#else 
+			#define MTDPARTS_DEFAULT "mtdparts=ath-nor0:320k(u-boot-and-env);ath-nand:512k(pad),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
+			#define ATH_ROOT_DEV	"31:03"
+			#define ATH_F_LEN	0x700000
+			#define ATH_F_ADDR	0x1c0000
+			#define ATH_K_ADDR	0x80000
+			#define ATH_K_LEN	0x140000
+		#endif
+	#endif
+	#define CFG_ENV_ADDR	0x9f040000
+	#define ATH_F_FILE		fs_name(${bc}-nand-jffs2)
+	#define ATH_K_FILE		vmlinux${bc}.lzma.uImage
+	#define ATH_F_CMD		nand_gen_cmd(lf, ATH_F_ADDR, ATH_F_FILE, ATH_F_LEN)
+	#define ATH_K_CMD		nand_gen_cmd(lk, ATH_K_ADDR, ATH_K_FILE, ATH_K_LEN)
+	#define ATH_EXTRA_ENV		"bootdevice=0\0"
+	#error "Please define locations of calibration data sectors"
+#else
+	#if defined(COMPRESSED_UBOOT)
+		#define ATH_F_FILE	fs_name(${bc}-jffs2)
+		#define ATH_F_LEN	$filesize
+		#define ATH_F_ADDR	0x9f010000
+		#define ATH_K_FILE	vmlinux${bc}.lzma.uImage
+		#define ATH_K_ADDR	0x9f300000
+			/*
+			* For compressed uboot, environment sector is not used.
+			* Hence the mtd partition indices get reduced by 1.
+			* This conflicts with
+			*	- minor no. for /dev/caldata in
+			*		build/scripts/{board}/dev.txt
+			*	- root=<rooot dev> kernel cmdline parameter
+			* Hence, doing a dummy split of the u-boot partition
+			* to maintain the same minor no. as in the normal u-boot.
+			*/
+	#else
+		#if (FLASH_SIZE == 16) /*FLASH SIZE */
+			#define ATH_F_FILE		fs_name(${bc}-jffs2)
+			#define ATH_F_LEN		0xE30000	//F for Filesystem?
+			#define ATH_F_ADDR		0x9f050000
+			#define ATH_K_FILE		vmlinux${bc}.lzma.uImage	//K for Kernel?
+			#define ATH_K_ADDR		0x9fe80000
+			//mtdparts_default seems unused, mtdparts for bootargs are generated independently
+		#elif (FLASH_SIZE == 8)
+			#define ATH_F_FILE		fs_name(${bc}-jffs2)
+			#define ATH_F_LEN		0x630000
+			#define ATH_F_ADDR		0x9f050000
+			#define ATH_K_FILE		vmlinux${bc}.lzma.uImage
+			#define ATH_K_ADDR		0x9f680000
+		#else 
+			#error "unsupported config"
+		#endif /*FlASH SIZE */
+	#endif /* COMPRESSED_UBOOT */
+	/*
+	** Parameters defining the location of the calibration/initialization
+	** information for the two Merlin devices.
+	** NOTE: **This will change with different flash configurations**
+	** 0x9f... however means these values are for NOR
+	*/
+	#define WLANCAL				0x9fff1000
+	#define BOARDCAL			0x9fff0000
+	#define ATHEROS_PRODUCT_ID		137
+	#define CAL_SECTOR			(CFG_MAX_FLASH_SECT - 1)
+#endif /*CONFIG_MI124*/
+/**************************************************************/
+
+
+/****************************************************************
+*	Compose BOOTARGS
+*/
+#undef CONFIG_BOOTARGS
+#if defined(CONFIG_PRODUCT_C7V4) || defined(CONFIG_PRODUCT_C7V5)
+	#define CONFIG_SECOND_BOOTLOADER_SIZE 0x20000
+	#ifndef CONFIG_SUPPORT_3RD_FW
+		#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
+									"rootfstype=squashfs " \
+									"init=/etc/preinit " \
+									"mtdparts=spi0.0:128k(factory-uboot),128k(u-boot),1152k(uImage),14912k(rootfs),64k@0xff0000(ART) " \
+									"mem=128M"
+	#else
+		#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
+									"rootfstype=squashfs " \
+									"init=/etc/preinit " \
+									"mtdparts=spi0.0:128k(factory-uboot),192k(u-boot),64k(ART),1536k(uImage),14464k@0x1e0000(rootfs) " \
+									"mem=128M"
+	#endif
+	#warning "Only stock bootargs supported"
+#elif defined(CONFIG_PRODUCT_C6V2)
+	#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
+									"rootfstype=squashfs " \
+									"init=/etc/preinit " \
+									"mtdparts=spi0.0:192k(u-boot),1024k(uImage),6848k(rootfs),64k@0x7f0000(ART) "                            
+#elif defined(CONFIG_PRODUCT_WR1043NV5)
+	#if defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
+		#define CONFIG_SECOND_BOOTLOADER_SIZE 0x20000
+		#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
+									"rootfstype=squashfs " \
+									"init=/etc/preinit " \
+									"mtdparts=spi0.0:128k(factory-uboot),128k(u-boot),1152k(uImage),14912k(rootfs),64k@0xff0000(ART) " \
+									"mem=64M"
+	#else
+		#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
+									"rootfstype=squashfs " \
+									"init=/etc/preinit " \
+									"mtdparts=spi0.0:256k(u-boot),1152k(uImage),14912k(rootfs),64k@0xfd0000(ART) " \
+									"mem=64M"
+	#endif //defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
+	#warning "Only stock bootargs supported"
+#else
+	#error  "unknown product"
+#endif
+/****************************************************************** */
+
+/******************************************************************
+*	Compose boot command: this is the actual kernel address!
+*/
+#ifdef CONFIG_ATH_NAND_SUPPORT
+	#ifdef ATH_SPI_NAND
+		#define CONFIG_BOOTCOMMAND       "nboot 0x81000000 0 0"
+	#else
+		#define CONFIG_BOOTCOMMAND	"nboot 0x81000000 0 0x80000"
+	#endif 
+#else
+	#if (FLASH_SIZE == 16) /*FLASH_SIZE */
+		#ifdef CONFIG_PRODUCT_WR1043NV5
+			#if defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
+				#define CONFIG_BOOTCOMMAND	"bootm 0x9f040000"
+			#else
+				#define CONFIG_BOOTCOMMAND	"bootm 0x9f020000"
+			#endif
+		#elif defined(CONFIG_PRODUCT_C7V5)
+			#define CONFIG_BOOTCOMMAND	"bootm 0x9f0c0000"
+		#elif defined(CONFIG_PRODUCT_C6V2)
+			#define CONFIG_BOORCOMMAND	"bootm 0x9f030000" //TODO
+		#else
+			#error "unknown product"
+		#endif
+	#elif (FLASH_SIZE == 8)
+		#ifdef CONFIG_PRODUCT_C6V2
+			#define CONFIG_BOOTCOMMAND	"bootm 0x9f030000" //This is stock
+		#else
+			#error "unknown product"
+		#endif
+	#endif /*FLASH_SIZE */
+#endif
+/************************************************************************/
+
+/************************************************************************
+ * U-Boot environment and CLI configuration
+ */
+
+/******************************************************************/
+
+/*****************************************************************
  * Web Failsafe configuration
  */
+#ifdef COMPRESSED_UBOOT
+	#define ATH_U_FILE	tuboot.bin
+#else
+	#define ATH_U_FILE	u-boot.bin	//U for U-boot
+#endif
+
 #define CONFIG_FW_RECOVERY_ADDR					0x80060000
 #define WEBFAILSAFE_UPLOAD_RAM_ADDRESS			CONFIG_FW_RECOVERY_ADDR
-
-// ART partition size and offset
 #define WEBFAILSAFE_DISABLE_UBOOT_UPGRADE
-
 #define WEBFAILSAFE_DISABLE_ART_UPGRADE
-
 // max. firmware size <= (FLASH_SIZE -  WEBFAILSAFE_UPLOAD_LIMITED_AREA_IN_BYTES)
 #define WEBFAILSAFE_UPLOAD_LIMITED_AREA_IN_BYTES	(0)
-
 // progress state info
 #define WEBFAILSAFE_PROGRESS_START				0
 #define WEBFAILSAFE_PROGRESS_TIMEOUT			1
@@ -131,355 +396,68 @@
 #define WEBFAILSAFE_PROGRESS_UPGRADE_READY		3
 #define WEBFAILSAFE_PROGRESS_UPGRADE_FAILED		4
 #define WEBFAILSAFE_PROGRESS_CHECK_FAILED		5
-
 // update type
 #define WEBFAILSAFE_UPGRADE_TYPE_FIRMWARE		0
 #define WEBFAILSAFE_UPGRADE_TYPE_UBOOT			1
 #define WEBFAILSAFE_UPGRADE_TYPE_ART			2
-
-// DDR2
-// 0x40c3   25MHz
-// 0x4138   40MHz 
-// DDR1
-// 0x4186   25Mhz
-// 0x4270   40Mhz
-
-#define CFG_DDR_REFRESH_VAL		0x4186
-#define CFG_DDR2_REFRESH_VAL    0x40c3
-/*
- * The following #defines are needed to get flash environment right
- */
-#define	CFG_MONITOR_BASE	TEXT_BASE
-#define	CFG_MONITOR_LEN		(192 << 10)
-
-#undef CONFIG_BOOTARGS
-
-#define __gen_cmd(n, a, f, ec, cc, el)		\
-	#n "=tftp 0x80060000 ${dir}" #f "&&"	\
-	#ec " " #a " " #el "&&"			\
-	#cc " $fileaddr " #a " $filesize\0"
-
-#define gen_cmd(n, a, f)			\
-	__gen_cmd(n, a, f, erase, cp.b, +$filesize)
-
-#define gen_cmd_el(n, a, f, el)			\
-	__gen_cmd(n, a, f, erase, cp.b, +el)
-
-#define nand_gen_cmd(n, a, f, s)		\
-	__gen_cmd(n, a, f, nand erase, nand write, s)
-
-#define __fs_name(x, y)		x ## y
-#define _fs_name(x, y)		__fs_name(x, y)
-#define fs_name(y)		_fs_name(__CONFIG_BOARD_NAME, y)
-
-#ifdef COMPRESSED_UBOOT
-#	define ATH_U_FILE	tuboot.bin
-#else
-#	define ATH_U_FILE	u-boot.bin
-#endif
-
-
-#ifdef CONFIG_ATH_NAND_SUPPORT
-#	ifdef CONFIG_ATH_NAND_BR	// nand boot rom
-#		if defined(COMPRESSED_UBOOT)
-#			define ATH_U_CMD	nand_gen_cmd(lu, 0x0, 2fw.bin, 0x20000)
-#			define MTDPARTS_DEFAULT	"mtdparts=ath-nand:128k(u-boot),384k(free),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
-#		else
-#		define ATH_U_CMD	nand_gen_cmd(lu, 0x0, 2fw.bin, 0x40000)
-#		define MTDPARTS_DEFAULT "mtdparts=ath-nand:256k(u-boot),256k(u-boot-env),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
-#		endif
-#		define ATH_ROOT_DEV	"31:03"
-#		define CFG_ENV_ADDR	0x00040000
-#	else //dual flash
-#	ifdef ATH_SPI_NAND 
-#		define MTDPARTS_DEFAULT "mtdparts=ath-nor0:256k(u-boot),64k(u-boot-env),512k(pad),256k(config),896k(reserved),64k(caldata);ath-spi-nand:2m(uImage),20m(rootfs),86m(storage),20m(reserved)"
-#		define ATH_ROOT_DEV	"31:07"
-#		define ATH_F_LEN	0x1400000
-#		define ATH_F_ADDR	0x200000
-#		define ATH_K_ADDR	0x0
-#		define ATH_K_LEN	0x200000
-#	else 
-#		define MTDPARTS_DEFAULT "mtdparts=ath-nor0:320k(u-boot-and-env);ath-nand:512k(pad),1280k(uImage),7m(rootfs),128k(dummy),128k(caldata)"
-#		define ATH_ROOT_DEV	"31:03"
-#		define ATH_F_LEN	0x700000
-#		define ATH_F_ADDR	0x1c0000
-#		define ATH_K_ADDR	0x80000
-#		define ATH_K_LEN	0x140000
-#	endif
-#	endif
-#	define CFG_ENV_ADDR	0x9f040000
-#	define ATH_F_FILE		fs_name(${bc}-nand-jffs2)
-#	define ATH_K_FILE		vmlinux${bc}.lzma.uImage
-#	define ATH_F_CMD		nand_gen_cmd(lf, ATH_F_ADDR, ATH_F_FILE, ATH_F_LEN)
-#	define ATH_K_CMD		nand_gen_cmd(lk, ATH_K_ADDR, ATH_K_FILE, ATH_K_LEN)
-#	define ATH_EXTRA_ENV		"bootdevice=0\0"
-#else
-#	if defined(COMPRESSED_UBOOT)
-#		define ATH_U_FILE	tuboot.bin
-#		define ATH_F_FILE	fs_name(${bc}-jffs2)
-#		define ATH_F_LEN	$filesize
-#		define ATH_F_ADDR	0x9f010000
-#		define ATH_K_FILE	vmlinux${bc}.lzma.uImage
-#		define ATH_K_ADDR	0x9f300000
-		/*
-		 * For compressed uboot, environment sector is not used.
-		 * Hence the mtd partition indices get reduced by 1.
-		 * This conflicts with
-		 *	- minor no. for /dev/caldata in
-		 *		build/scripts/{board}/dev.txt
-		 *	- root=<rooot dev> kernel cmdline parameter
-		 * Hence, doing a dummy split of the u-boot partition
-		 * to maintain the same minor no. as in the normal u-boot.
-		 */
-#		define MTDPARTS_DEFAULT	"mtdparts=ath-nor0:32k(u-boot1),32k(u-boot2),3008k(rootfs),896k(uImage),64k(mib0),64k(ART)"
-#	else
-#if (FLASH_SIZE == 16) /*FLASH SIZE */
-#	define ATH_F_FILE		fs_name(${bc}-jffs2)
-#	define ATH_F_LEN		0xE30000
-#	define ATH_F_ADDR		0x9f050000
-#	define ATH_K_FILE		vmlinux${bc}.lzma.uImage
-#	define ATH_K_ADDR		0x9fe80000
-#	define MTDPARTS_DEFAULT		"mtdparts=spi0.0:256k(u-boot),1152k(uImage)," ATH_ROOTFS_SIZE "," ATH_MTDPARTS_MIB0 ",64k(ART)"
-#elif (FLASH_SIZE == 8)
-#	define ATH_F_FILE		fs_name(${bc}-jffs2)
-#	define ATH_F_LEN		0x630000
-#	define ATH_F_ADDR		0x9f050000
-#	define ATH_K_FILE		vmlinux${bc}.lzma.uImage
-#	define ATH_K_ADDR		0x9f680000
-#	define MTDPARTS_DEFAULT		"mtdparts=ath-nor0:256k(u-boot),64k(u-boot-env),6336k(rootfs),1408k(uImage)," ATH_MTDPARTS_MIB0 ",64k(ART)"
-#elif (FLASH_SIZE == 4) 
-#	define ATH_F_FILE		fs_name(${bc}-jffs2)
-#	define ATH_F_LEN		0x2b0000
-#	define ATH_F_ADDR		0x9f050000
-#	define ATH_K_FILE		vmlinux${bc}.lzma.uImage
-#	define ATH_K_ADDR		0x9f300000
-#	define MTDPARTS_DEFAULT		"mtdparts=ath-nor0:256k(u-boot),64k(u-boot-env),2752k(rootfs),896k(uImage)," ATH_MTDPARTS_MIB0 ",64k(ART)"
-#endif /*FlASH SIZE */
-#endif /* COMPRESSED_UBOOT */
-#endif /*CONFIG_MI124*/
-
-#ifndef ATH_ROOT_DEV
-#	define ATH_ROOT_DEV	"31:02"
-#endif
-
-#ifndef ATH_EXTRA_ENV
-#	define ATH_EXTRA_ENV
-#endif
-
-#ifndef ATH_U_CMD
-#	define ATH_U_CMD	gen_cmd(lu, 0x9f000000, ATH_U_FILE)
-#endif
-
-#ifndef ATH_F_CMD
-#	define ATH_F_CMD	gen_cmd_el(lf, ATH_F_ADDR, ATH_F_FILE, ATH_F_LEN)
-#endif
-
-#ifndef ATH_K_CMD
-#	define ATH_K_CMD	gen_cmd(lk, ATH_K_ADDR, ATH_K_FILE)
-#endif
-
-#define CONFIG_EXTRA_ENV_SETTINGS	\
-	"dir=\0" ATH_U_CMD ATH_F_CMD ATH_K_CMD ""
-
-#if defined(CONFIG_PRODUCT_C7V4) || defined(CONFIG_PRODUCT_C7V5)
-#define CONFIG_SECOND_BOOTLOADER_SIZE 0x20000
-#ifndef CONFIG_SUPPORT_3RD_FW
-#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
-                            "rootfstype=squashfs " \
-                            "init=/etc/preinit " \
-                            "mtdparts=spi0.0:128k(factory-uboot),128k(u-boot),1152k(uImage),14912k(rootfs),64k@0xff0000(ART) " \
-                            "mem=128M"
-#else
-#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
-                            "rootfstype=squashfs " \
-                            "init=/etc/preinit " \
-                            "mtdparts=spi0.0:128k(factory-uboot),192k(u-boot),64k(ART),1536k(uImage),14464k@0x1e0000(rootfs) " \
-                            "mem=128M"
-#endif
-#elif defined(CONFIG_PRODUCT_C6V2)
-#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
-								"rootfstype=squashfs " \
-								"init=/etc/preinit " \
-								"mtdparts=spi0.0:192k(u-boot),1024k(uImage),6848k(rootfs),64k@0x7f0000(ART) "                            
-#elif defined(CONFIG_PRODUCT_WR1043NV5)
-#if defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
-#define CONFIG_SECOND_BOOTLOADER_SIZE 0x20000
-#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
-                            "rootfstype=squashfs " \
-                            "init=/etc/preinit " \
-                            "mtdparts=spi0.0:128k(factory-uboot),128k(u-boot),1152k(uImage),14912k(rootfs),64k@0xff0000(ART) " \
-                            "mem=64M"
-#else
-#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
-                            "rootfstype=squashfs " \
-                            "init=/etc/preinit " \
-                            "mtdparts=spi0.0:256k(u-boot),1152k(uImage),14912k(rootfs),64k@0xfd0000(ART) " \
-                            "mem=64M"
-#endif //defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
-#else
-#define	CONFIG_BOOTARGS		"console=ttyS0,115200 board=AP152 rootfstype=squashfs init=/etc/preinit " MTDPARTS_DEFAULT
-#endif
-
-/*
- * timeout values are in ticks
- */
-#define CFG_FLASH_ERASE_TOUT	(2 * CFG_HZ) /* Timeout for Flash Erase */
-#define CFG_FLASH_WRITE_TOUT	(2 * CFG_HZ) /* Timeout for Flash Write */
-
-/*
- * Cache lock for stack
- */
-#define CFG_INIT_SP_OFFSET	0x1000
-#define CFG_INIT_SRAM_SP_OFFSET	0xbd001800
-
-#ifdef CONFIG_ATH_NAND_SUPPORT
-#ifdef ATH_SPI_NAND
-#	define CONFIG_BOOTCOMMAND       "nboot 0x81000000 0 0"
-#else
-#	define CONFIG_BOOTCOMMAND	"nboot 0x81000000 0 0x80000"
-#endif 
-#else
-#	define CFG_ENV_ADDR		0x9f040000
-#if (FLASH_SIZE ==16) /*FLASH_SIZE */
-#ifdef CONFIG_PRODUCT_WR1043NV5
-#if defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f040000"
-#else
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f020000"
-#endif
-#elif defined(CONFIG_PRODUCT_C7V5)
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f0c0000"
-#else
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f040000"
-#endif
-#elif (FLASH_SIZE == 8)
-#ifdef CONFIG_PRODUCT_C6V2
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f030000"
-#else
-	#define CONFIG_BOOTCOMMAND	"bootm 0x9f680000"
-#endif
-#elif  (FLASH_SIZE == 4)
-#	define CONFIG_BOOTCOMMAND	"bootm 0x9f300000"
-#endif /*FLASH_SIZE */
-#endif
-
-
-
-#ifdef ENABLE_DYNAMIC_CONF
-#define CFG_DDR_MAGIC		0xaabacada
-#define CFG_DDR_MAGIC_F		(UBOOT_ENV_SEC_START + CFG_FLASH_SECTOR_SIZE - 0x30)
-#define CFG_DDR_CONFIG_VAL_F	*(volatile int *)(CFG_DDR_MAGIC_F + 4)
-#define CFG_DDR_CONFIG2_VAL_F	*(volatile int *)(CFG_DDR_MAGIC_F + 8)
-#define CFG_DDR_EXT_MODE_VAL_F	*(volatile int *)(CFG_DDR_MAGIC_F + 12)
-#endif
-
-#define CONFIG_NET_MULTI
-#define CONFIG_MEMSIZE_IN_BYTES
-
-#if defined(CONFIG_CUS249) || defined(CONFIG_TB753)
-#else
-#define CONFIG_PCI 1
-#define CONFIG_USB 1
-#endif
-
-/*-----------------------------------------------------------------------
- * Cache Configuration
- */
-#ifndef COMPRESSED_UBOOT
-#define ATH_CFG_COMMANDS	((			\
-				CONFIG_CMD_DFL	|	\
-				CFG_CMD_DHCP	|	\
-				CFG_CMD_ELF	|	\
-				CFG_CMD_PCI	|	\
-				CFG_CMD_FLS	|	\
-				CFG_CMD_MII	|	\
-				CFG_CMD_PING	|	\
-				CFG_CMD_NET	|	\
-				CFG_CMD_ENV	|	\
-				CFG_CMD_PLL	|	\
-				CFG_CMD_FLASH	|	\
-				CFG_CMD_RUN	|	\
-				CFG_CMD_ELF	|	\
-				CFG_CMD_DDR	|	\
-				CFG_CMD_ETHREG		\
-				) & ~(			\
-				CFG_CMD_IMLS	|	\
-				CFG_CMD_FLASH		\
-				))
-#else
-#	ifdef CONFIG_ATH_NAND_BR
-#		define ATH_CFG_COMMANDS		((			\
-						CONFIG_CMD_DFL	|	\
-						CFG_CMD_PING	|	\
-						CFG_CMD_NET) & ~(	\
-						CFG_CMD_FLASH		\
-						))
-#	else
-#		define ATH_CFG_COMMANDS		(CONFIG_CMD_DFL	|	\
-				CFG_CMD_PING	|	\
-				CFG_CMD_NET)
-#	endif
-#endif /* #ifndef COMPRESSED_UBOOT */
-
-#ifdef CONFIG_ATH_NAND_SUPPORT
-#	ifdef CONFIG_ATH_NAND_BR
-#		define CFG_ENV_IS_IN_NAND	1
-#		define CFG_ENV_OFFSET		0x40000u
-#		define CFG_ENV_SIZE		0x40000u
-#		define ATH_EXTRA_CMD		CFG_CMD_NAND
-#	else
-#		define CFG_ENV_IS_IN_FLASH	1
-#		define CFG_ENV_SIZE		CFG_FLASH_SECTOR_SIZE
-#		define ATH_EXTRA_CMD		(CFG_CMD_NAND | CFG_CMD_FLASH)
-#	endif
-#	define NAND_MAX_CHIPS			1
-#	define CFG_MAX_NAND_DEVICE		1
-#else
-#	define ATH_EXTRA_CMD			CFG_CMD_FLASH
-#	define CFG_ENV_IS_IN_FLASH		1
-#	define CFG_ENV_SIZE			CFG_FLASH_SECTOR_SIZE
-#endif
-
-#define DEBUG
-
-#ifdef COMPRESSED_UBOOT
-#undef  CFG_ENV_IS_IN_FLASH
-#undef  CFG_ENV_IS_IN_NAND
-#define CFG_ENV_IS_NOWHERE		1
-#endif
-
-#define CONFIG_COMMANDS			(ATH_CFG_COMMANDS | ATH_EXTRA_CMD)
 
 #define CONFIG_IPADDR                   192.168.0.2
 #define CONFIG_SERVERIP                 192.168.0.10
 #define CONFIG_ETHADDR			0x00:0xaa:0xbb:0xcc:0xdd:0xee
 #define CFG_FAULT_ECHO_LINK_DOWN	1
 
+#ifndef ATH_U_CMD	//U-boot
+	#define ATH_U_CMD	gen_cmd(lu, 0x9f000000, ATH_U_FILE)
+#endif
+#ifndef ATH_F_CMD	//Flash
+	#define ATH_F_CMD	gen_cmd_el(lf, ATH_F_ADDR, ATH_F_FILE, ATH_F_LEN)
+#endif
+#ifndef ATH_K_CMD	//Kernel
+	#define ATH_K_CMD	gen_cmd(lk, ATH_K_ADDR, ATH_K_FILE)
+#endif
+#define CONFIG_EXTRA_ENV_SETTINGS	\
+	"dir=\0" ATH_U_CMD ATH_F_CMD ATH_K_CMD ""
+/***************************************************************** */
+
+
+/*******************************************************************
+*	HW configuration
+*/
+#ifndef ATH_ROOT_DEV
+	#define ATH_ROOT_DEV	"31:02"
+#endif
+#ifndef ATH_EXTRA_ENV
+	#define ATH_EXTRA_ENV
+#endif
+#define CONFIG_NET_MULTI
+#define CONFIG_MEMSIZE_IN_BYTES
 #define CFG_PHY_ADDR			0
-#define CFG_GMII			0
+#define CFG_GMII				0
 #define CFG_MII0_RMII			1
 #define CFG_AG7100_GE0_RMII		1
-
-#define CFG_BOOTM_LEN			(16 << 20) /* 16 MB */
-
-#ifndef COMPRESSED_UBOOT
-#define CFG_HUSH_PARSER
-#define CFG_PROMPT_HUSH_PS2		"hush>"
-#endif
-
-/*
-** Parameters defining the location of the calibration/initialization
-** information for the two Merlin devices.
-** NOTE: **This will change with different flash configurations**
-*/
-
-#define WLANCAL				0x9fff1000
-#define BOARDCAL			0x9fff0000
-#define ATHEROS_PRODUCT_ID		137
-#define CAL_SECTOR			(CFG_MAX_FLASH_SECT - 1)
-
+//timeout values are in ticks
+#define CFG_FLASH_ERASE_TOUT	(2 * CFG_HZ) /* Timeout for Flash Erase */
+#define CFG_FLASH_WRITE_TOUT	(2 * CFG_HZ) /* Timeout for Flash Write */
+//Cache lock for stack
+#define CFG_INIT_SP_OFFSET	0x1000
+#define CFG_INIT_SRAM_SP_OFFSET	0xbd001800
+// DDR2
+// 0x40c3   25MHz
+// 0x4138   40MHz 
+// DDR1
+// 0x4186   25Mhz
+// 0x4270   40Mhz
+#define CFG_DDR_REFRESH_VAL		0x4186
+#define CFG_DDR2_REFRESH_VAL    0x40c3
 /* For Merlin, both PCI, PCI-E interfaces are valid */
+#if defined(CONFIG_CUS249) || defined(CONFIG_TB753)
+#else
+	#define CONFIG_PCI 1
+	#define CONFIG_USB 1 //Interesting, USB is not routed on the board of C6, but still active?
+#endif
 #define ATH_ART_PCICFG_OFFSET		12
+#define CONFIG_PCI_CONFIG_DATA_IN_OTP
+/******************************************************************/
 
 #include <cmd_confdefs.h>
 
