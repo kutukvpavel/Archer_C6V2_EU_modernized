@@ -36,6 +36,12 @@
 /** ************************************************************ */
 
 
+/******************* Preprocessor macros ************************/
+#define xstr(s) str(s)
+#define str(s) #s
+/****************************************************************/
+
+
 /*-----------------------------------------------------------------------
  * FLASH and environment organization
  */
@@ -96,10 +102,8 @@
 /*****************************************************************
  * U-Boot dynamic configuration and commands
  */
-#ifndef COMPRESSED_UBOOT //Not sure if we are compressed or not
+#ifndef COMPRESSED_UBOOT //U-Boot is compressed for C6V2
 	#define ENABLE_DYNAMIC_CONF	1
-#else
-	#error "U-Boot is actually compressed" //< Interim to find out which config is actually used
 #endif
 
 #ifdef ENABLE_DYNAMIC_CONF
@@ -240,12 +244,20 @@
 	#define ATH_EXTRA_ENV		"bootdevice=0\0"
 	#error "Please define locations of calibration data sectors"
 #else
-	#if defined(COMPRESSED_UBOOT)
-		#define ATH_F_FILE	fs_name(${bc}-jffs2)
-		#define ATH_F_LEN	$filesize
-		#define ATH_F_ADDR	0x9f010000
-		#define ATH_K_FILE	vmlinux${bc}.lzma.uImage
-		#define ATH_K_ADDR	0x9f300000
+	#if defined(COMPRESSED_UBOOT) //This is the path for C6V2
+		#if (FLASH_SIZE == 16) /*FLASH SIZE */
+			#define ATH_F_FILE	fs_name(${bc}-jffs2)
+			#define ATH_F_LEN	$filesize
+			#define ATH_F_ADDR	(CFG_FLASH_BASE + 0x130000)
+			#define ATH_K_FILE	vmlinux${bc}.lzma.uImage
+			#define ATH_K_ADDR	(CFG_FLASH_BASE + 0x030000) //TODO
+			#define MTDPARTS_DEFAULT "mtdparts=ath-nor0:128k(u-boot),64k(info),1024k(uImage),6720k(rootfs),128k(tplink),64k(art)"
+		#elif (FLASH_SIZE == 8)
+			#define ATH_F_FILE	fs_name(${bc}-jffs2)
+			#define ATH_F_LEN	$filesize
+			#define ATH_F_ADDR	(CFG_FLASH_BASE + 0x130000)
+			#define ATH_K_FILE	vmlinux${bc}.lzma.uImage
+			#define ATH_K_ADDR	(CFG_FLASH_BASE + 0x030000) //This is stock
 			/*
 			* For compressed uboot, environment sector is not used.
 			* Hence the mtd partition indices get reduced by 1.
@@ -254,8 +266,12 @@
 			*		build/scripts/{board}/dev.txt
 			*	- root=<rooot dev> kernel cmdline parameter
 			* Hence, doing a dummy split of the u-boot partition
-			* to maintain the same minor no. as in the normal u-boot.
+			* to maintain the same minor no. as in the normal u-boot. ----- ??????
 			*/
+			#define MTDPARTS_DEFAULT "mtdparts=ath-nor0:128k(u-boot),64k(info),1024k(uImage),6720k(rootfs),128k(tplink),64k(art)"
+		#else
+			#error "unsupproted config"
+		#endif
 	#else
 		#if (FLASH_SIZE == 16) /*FLASH SIZE */
 			#define ATH_F_FILE		fs_name(${bc}-jffs2)
@@ -263,7 +279,6 @@
 			#define ATH_F_ADDR		0x9f050000
 			#define ATH_K_FILE		vmlinux${bc}.lzma.uImage	//K for Kernel?
 			#define ATH_K_ADDR		0x9fe80000
-			//mtdparts_default seems unused, mtdparts for bootargs are generated independently
 		#elif (FLASH_SIZE == 8)
 			#define ATH_F_FILE		fs_name(${bc}-jffs2)
 			#define ATH_F_LEN		0x630000
@@ -280,10 +295,9 @@
 	** NOTE: **This will change with different flash configurations**
 	** 0x9f... however means these values are for NOR
 	*/
-	#define WLANCAL				0x9fff1000
-	#define BOARDCAL			0x9fff0000
-	#define ATHEROS_PRODUCT_ID		137
-	#define CAL_SECTOR			(CFG_MAX_FLASH_SECT - 1)
+	//#define WLANCAL					0x9fff1000	//This is just under 16M, but the device was originally 8M !?
+	//#define BOARDCAL				0x9fff0000
+	#define CAL_SECTOR				(CFG_MAX_FLASH_SECT - 1)	//This is more like it
 #endif /*CONFIG_MI124*/
 /**************************************************************/
 
@@ -312,7 +326,7 @@
 	#define CONFIG_BOOTARGS     "console=ttyS0,115200 board=AP152 " \
 									"rootfstype=squashfs " \
 									"init=/etc/preinit " \
-									"mtdparts=spi0.0:192k(u-boot),1024k(uImage),6848k(rootfs),64k@0x7f0000(ART) "                            
+									MTDPARTS_DEFAULT                          
 #elif defined(CONFIG_PRODUCT_WR1043NV5)
 	#if defined(CFG_DOUBLE_BOOT_FACTORY) || defined (CFG_DOUBLE_BOOT_SECOND)
 		#define CONFIG_SECOND_BOOTLOADER_SIZE 0x20000
@@ -354,13 +368,13 @@
 		#elif defined(CONFIG_PRODUCT_C7V5)
 			#define CONFIG_BOOTCOMMAND	"bootm 0x9f0c0000"
 		#elif defined(CONFIG_PRODUCT_C6V2)
-			#define CONFIG_BOORCOMMAND	"bootm 0x9f030000" //TODO
+			#define CONFIG_BOORCOMMAND	"bootm " xstr(ATH_K_ADDR) //TODO
 		#else
 			#error "unknown product"
 		#endif
 	#elif (FLASH_SIZE == 8)
 		#ifdef CONFIG_PRODUCT_C6V2
-			#define CONFIG_BOOTCOMMAND	"bootm 0x9f030000" //This is stock
+			#define CONFIG_BOOTCOMMAND	"bootm " xstr(ATH_K_ADDR)
 		#else
 			#error "unknown product"
 		#endif
@@ -423,6 +437,7 @@
 /*******************************************************************
 *	HW configuration
 */
+#define ATHEROS_PRODUCT_ID		137
 #ifndef ATH_ROOT_DEV
 	#define ATH_ROOT_DEV	"31:02"
 #endif
